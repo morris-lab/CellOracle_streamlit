@@ -5,8 +5,8 @@
 
 #from .utility import check_python_requirements
 
-from .streamlit_app.perturb_simulation_main import perturb_simulation_set_01
-
+from .streamlit_perturb_simulation_app.perturb_simulation_main import perturb_simulation_set_01
+from .streamlit_network_analysis_app.network_analysis_main import network_analysis_01
 #from . import motif_analysis
 
 

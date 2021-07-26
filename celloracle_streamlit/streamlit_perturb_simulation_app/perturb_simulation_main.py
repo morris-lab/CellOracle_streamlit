@@ -21,14 +21,14 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
     dev_scale_min, dev_scale_max, dev_scale_step, dev_scale_default,
     sim_scale_min, sim_scale_max, sim_scale_step, sim_scale_default, sim_coef,
     ip_min, ip_min_default, ip_max, ip_max_default, ip_step,
-    description_0, description_1,
+    description_0, description_1, title,
     pseudotime_min=None, pseudotime_min_default=None, pseudotime_max=None, pseudotime_max_default=None):
 
 
 
     ## Define functions and hyperoarameters
     @st.cache(allow_output_mutation=True)
-    def load_data():
+    def load_data(path_adata, path_sim_data):
         #path = "test3.h5ad"
         adata = sc.read_h5ad(path_adata)
 
@@ -40,7 +40,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
 
 
     @st.cache(allow_output_mutation=True, suppress_st_warning=True)
-    def load_ip_scores():
+    def load_ip_scores(path_sim_data):
         # Load data with Oracle_systematic_analysis_helper.
         helper = Oracle_systematic_analysis_helper(hdf5_file_path=path_sim_data)
         helper.get_negative_ip_sum_for_all_data(verbose=False, return_result=False)
@@ -64,23 +64,23 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
     ### APP starts here
 
     ## Load data
-    adata, dev = load_data()
+    adata, dev = load_data(path_adata=path_adata, path_sim_data=path_sim_data)
     meta_data = dev.get_hdf5_info()
 
     if pseudotime_min is not None:
-        helper = load_ip_scores()
+        helper = load_ip_scores(path_sim_data=path_sim_data)
     ## Side bar
 
+    st.sidebar.write(f"# {title}")
 
-    st.sidebar.write("# 1. Check gene expression")
+    st.sidebar.write("## 1. Check gene expression")
     # Select gene
     genes = sorted(adata.var.index.values)
     gene_viz = st.sidebar.selectbox("Select gene to show gene expression",
                                 genes,
                                 index=genes.index(default_gene))
-
-
-    st.sidebar.write("# 2. Simulation")
+    
+    st.sidebar.write("## 2. Simulation")
 
     # Select metric
     units = list(meta_data["misc_list"])
@@ -115,7 +115,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
 
     if pseudotime_min is not None:
 
-        st.sidebar.write("# 3. Inner-product score analysis")
+        st.sidebar.write("## 3. Sort genes by Negative IP sum score")
         st.sidebar.write("Select digitized pseudotime range for inner product score sum calculation")
         lower = st.sidebar.number_input("Lower",
                                         min_value=pseudotime_min,
@@ -130,8 +130,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
                                         value=pseudotime_max_default)
 
     ## Main
-
-    st.write("# CellOracle perturbation simulation with hematopoiesis scRNA-seq data")
+    st.write(f"# {title}")
     st.write("## About")
     st.write(description_0)
 
@@ -143,8 +142,6 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
 
     col2.write("### Gene expression")
     col2.pyplot(plot_embeddings(gene_viz, args={"use_raw":False, "cmap": "viridis"}))
-
-
 
     st.write(f"# 2. CellOracle gene perturbation simulation results")
     st.write(description_1)
@@ -158,11 +155,11 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
     st.pyplot(plot_sim_quiver(dev, gene, scale_perturb, coef=sim_coef))
     st.pyplot(plot_sim_vectorfield(dev, gene, scale_perturb))
 
-    if pseudotime_min is not None:
+    st.write("## 3. Inner-product score between simulation vector and pseudotime vector")
+    st.pyplot(plot_ip_score(dev, vmin, vmax, scale_perturb))
+    st.pyplot(plot_ip_distribution(dev, vmin, vmax))
 
-        st.write("## 3. Inner-product score")
-        st.pyplot(plot_ip_score(dev, vmin, vmax, scale_perturb))
-        st.pyplot(plot_ip_distribution(dev, vmin, vmax))
+    if pseudotime_min is not None:
 
         st.write(f"# 3. Sort genes by Negative IP sum score")
 

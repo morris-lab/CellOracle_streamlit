@@ -45,7 +45,11 @@ setup(
     #url='https://github.com/morris-lab/CellOracle',
     license=license,
     package_data={"celloracle": []},
-    packages=["celloracle_streamlit",  "celloracle_streamlit.applications", "celloracle_streamlit.visualizations"],
+    packages=["celloracle_streamlit",
+    "celloracle_streamlit.utility"
+    "celloracle_streamlit.streamlit_network_analysis_app",
+    "celloracle_streamlit.streamlit_perturb_simulation_app"
+     "celloracle_streamlit.applications", "celloracle_streamlit.visualizations"],
     #entry_points={'console_scripts':['seuratToAnndata = celloracle.data_conversion.process_seurat_object:main']}
 
 )

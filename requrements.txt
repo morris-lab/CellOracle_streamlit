@@ -7,3 +7,4 @@ tqdm>=4.45
 anndata>=0.7.5
 scanpy>=1.6
 streamlit
+scikit-image

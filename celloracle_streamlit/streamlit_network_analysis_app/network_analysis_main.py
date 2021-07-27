@@ -1,14 +1,16 @@
 # Streamlit practice 2021 0223
 
+import os
 import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import scanpy as sc
+from skimage import io
 
-import celloracle as co
-from celloracle.network_analysis.cartography import plot_cartography_kde
 
+
+from .network_analysis_visualization import (plot_score_per_cluster,
+    plot_scores_as_rank, plot_carto, plot_carto_terms, plot_score_comparison)
 
 def network_analysis_01(path_links, embedding_key,
     default_cluster_0, default_cluster_1, cluster_column_name,
@@ -18,6 +20,41 @@ def network_analysis_01(path_links, embedding_key,
 
 
     ## Define functions and hyperoarameters
+
+    def first_data_prep_links(path_links):
+        if os.path.isdir("tmp"):
+            pass
+        else:
+            os.makedirs("tmp")
+
+        path_score = os.path.join("tmp", os.path.basename(path_links).replace(".celloracle.links", "merged_score.parquet"))
+        path_palette = os.path.join("tmp", os.path.basename(path_links).replace(".celloracle.links", "palette.parquet"))
+
+        if os.path.isfile(path_score) & os.path.isfile(path_palette):
+            #pass
+            print(1)
+        else:
+            import celloracle as co
+            links = co.load_hdf5(path_links)
+            links.merged_score.to_parquet(path_score)
+            links.palette.to_parquet(path_palette)
+
+    def first_data_prep_adata(path_adata):
+
+        path_emgedding_img = os.path.join("tmp", os.path.basename(path_adata).replace(".h5ad", ".png"))
+
+        if os.path.isfile(path_emgedding_img):
+            pass
+        else:
+            import scanpy as sc
+            adata = sc.read_h5ad(path_adata)
+            plt.rcParams["savefig.dpi"] = 300
+            fig = sc.pl.embedding(adata=adata, basis=embedding_key, color=cluster_column_name,
+                                  s=50, return_fig=True, legend_loc="on data")
+            fig.savefig(path_emgedding_img)
+
+
+
     @st.cache(allow_output_mutation=True)
     def load_anndata(path_adata):
         #path = "test3.h5ad"
@@ -26,84 +63,38 @@ def network_analysis_01(path_links, embedding_key,
         return adata
 
     @st.cache(allow_output_mutation=True)
-    def load_links(path_links):
-        #path = "test3.h5ad"
-        links = co.load_hdf5(path_links)
+    def load_network_data(path_links):
 
-        return links
+        path_score = os.path.join("tmp", os.path.basename(path_links).replace(".celloracle.links", "merged_score.parquet"))
+        path_palette = os.path.join("tmp", os.path.basename(path_links).replace(".celloracle.links", "palette.parquet"))
 
+        merged_score = pd.read_parquet(path_score)
+        palette = pd.read_parquet(path_palette)
+
+        return merged_score, palette
+
+    @st.cache(allow_output_mutation=True)
+    def load_cluster_image(path_adata):
+        path_emgedding_img = os.path.join("tmp", os.path.basename(path_adata).replace(".h5ad", ".png"))
+        emgedding_img = io.imread(path_emgedding_img)
+        return emgedding_img
 
     def plot_embeddings(x, args={}):
         fig = sc.pl.embedding(adata=adata, basis=embedding_key, color=x, s=50, return_fig=True, **args)
         return fig
 
-    def plot_scores_as_rank(cluster, value, n_gene=50):
 
-
-        res = links.merged_score[links.merged_score.cluster == cluster]
-        res = res[value].sort_values(ascending=False)
-        res = res[:n_gene]
-
-        fig = plt.figure(figsize=[3, 6])
-
-        plt.scatter(res.values, range(len(res)))
-        plt.yticks(range(len(res)), res.index.values)#, rotation=90)
-        #plt.xlabel(value)
-        plt.title(f" {value} \n top {n_gene} in {cluster}")
-        plt.ticklabel_format(style='sci',
-                             axis='x',
-                             scilimits=(0,0))
-
-        plt.gca().invert_yaxis()
-
-
-        #plt.subplots_adjust(left=0.5, right=0.99)
-
-        return fig
-
-
-    def plot_score_per_cluster(gene):
-        fig = plt.figure(figsize=[6,5])
-        links.plot_score_per_cluster(goi=gene, plt_show=False)
-        return fig
-
-
-    def plot_score_comparison(value, cluster1, cluster2, percentile):
-        fig = plt.figure(figsize=[5,5])
-        links.plot_score_comparison_2D(value=value,
-                                       cluster1=cluster1,
-                                       cluster2=cluster2,
-                                       percentile=percentile)
-        return fig
-
-    def plot_carto(gene, cluster):
-        data = links.merged_score[links.merged_score.cluster == cluster]
-        data = data[["connectivity", "participation"]]
-        fig = plt.figure()
-        plot_cartography_kde(data,
-                             gois=gene,
-                             scatter=True,
-                             kde=False,
-                             args_kde={"n_levels": 105},
-                             args_line={"c":"gray"})
-
-        return fig
-
-    def plot_carto_terms(gene):
-        fig = plt.figure(figsize=[3, 6])
-        links.plot_cartography_term(goi=gene, plt_show=False)
-        #plt.yticks(links.cluster, fontsize=5)
-        return fig
 
 
     ### APP starts here
 
     ## Load data
-    if path_adata is not None:
-        adata = load_anndata(path_adata=path_adata)
-    links = load_links(path_links=path_links)
+    first_data_prep_links(path_links)
+    merged_score, palette = load_network_data(path_links)
+    genes_in_links = merged_score.index.unique()
 
-    genes_in_links = links.merged_score.index.unique()
+    first_data_prep_adata(path_adata)
+    emgedding_img = load_cluster_image(path_adata)
 
     ## Side bar
 
@@ -113,14 +104,14 @@ def network_analysis_01(path_links, embedding_key,
 
     # Select cluster
     st.sidebar.write("## Cluster")
-    clusters = links.cluster
+    clusters = list(palette.index.values)
     cluster = st.sidebar.selectbox("Select cluster to show detailed data",
                                    clusters, index=clusters.index(default_cluster_0))
 
 
     st.sidebar.write("## Gene")
     # Select gene
-    genes = sorted(adata.var.index.values)
+    genes = sorted(np.unique(merged_score.index))
     gene = st.sidebar.selectbox("Select gene to analyze",
                                 genes,
                                 index=genes.index(default_gene))
@@ -154,7 +145,7 @@ def network_analysis_01(path_links, embedding_key,
 
         #col1, col2 = st.beta_columns(2)
         st.write("### Clustering")
-        st.pyplot(plot_embeddings(cluster_column_name, args={"legend_loc": "on data"}))
+        st.image(emgedding_img)
 
         #col2.write("### Gene expression")
         #col2.pyplot(plot_embeddings(gene, args={"use_raw":False, "cmap": "viridis"}))
@@ -165,30 +156,32 @@ def network_analysis_01(path_links, embedding_key,
     st.write(f"## 1. Top {n_genes} genes in {cluster} GRN centrality scores")
 
     col1, col2, col3 = st.beta_columns(3)
-    col1.pyplot(plot_scores_as_rank(cluster=cluster,
+    col1.pyplot(plot_scores_as_rank(merged_score=merged_score,
+                                    cluster=cluster,
                                     value="degree_centrality_all",
                                     n_gene=n_genes))
-    col2.pyplot(plot_scores_as_rank(cluster=cluster,
+    col2.pyplot(plot_scores_as_rank(merged_score=merged_score,
+                                    cluster=cluster,
                                     value="betweenness_centrality",
                                     n_gene=n_genes))
-    col3.pyplot(plot_scores_as_rank(cluster=cluster,
+    col3.pyplot(plot_scores_as_rank(merged_score=merged_score,
+                                    cluster=cluster,
                                     value="eigenvector_centrality",
                                     n_gene=n_genes))
 
 
     st.write(f"## 2. All scores in {cluster} GRN")
 
-    df = links.merged_score[links.merged_score.cluster == cluster]
+    df = merged_score[merged_score.cluster == cluster]
     st.dataframe(df)
 
     st.write(f"## 3. Network score comparison between GRNs")
     st.write(f"### GRN 1: {cluster1},     GRN 2: {cluster2}")
     st.write(f"### Network score : {value}")
-    st.plotly_chart(
-        links.plot_score_comparison_2D(
-            value="degree_centrality_all",
-            cluster1=cluster1, cluster2=cluster2,
-            interactive=True))
+    st.plotly_chart(plot_score_comparison(merged_score=merged_score,
+                                          value=value,
+                                          cluster1=cluster1,
+                                          cluster2=cluster2))
 
 
     st.write("# Network dynamics")
@@ -198,14 +191,14 @@ def network_analysis_01(path_links, embedding_key,
     else:
         st.write(f"### Caution! {gene} does not have any connection in the filtered GRNs.")
     st.write(f"## 1. Score dynamics")
-    st.pyplot(plot_score_per_cluster(gene))
+    st.pyplot(plot_score_per_cluster(merged_score=merged_score, palette=palette, gene=gene, figsize=[6, 5]))
 
     st.write("## 2. Gene cartography analysis")
     col1, col2 = st.beta_columns([1, 2])
     col1.write("### 2.1 Cartography summary")
     if gene in genes_in_links:
-        col1.pyplot(plot_carto_terms(gene=gene))
+        col1.pyplot(plot_carto_terms(merged_score=merged_score, palette=palette, gene=gene))
     else:
         col1.write(f"{gene} does not have any connection in the filtered GRNs.")
     col2.write(f"### 2.2 Cartography of {gene} in {cluster} GRN")
-    col2.pyplot(plot_carto(gene=gene, cluster=cluster))
+    col2.pyplot(plot_carto(merged_score=merged_score, gene=gene, cluster=cluster))

@@ -4,6 +4,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import scanpy as sc
+import os
 
 
 from ..applications import Oracle_development_module, Oracle_systematic_analysis_helper
@@ -25,6 +26,21 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
     pseudotime_min=None, pseudotime_min_default=None, pseudotime_max=None, pseudotime_max_default=None):
 
 
+    def first_data_prep_ip(path_sim_data):
+        if os.path.isdir("tmp"):
+            pass
+        else:
+            os.makedirs("tmp")
+
+        path_nip = os.path.join("tmp", os.path.basename(path_sim_data).replace(".hdf5", "negative_ip_sum.parquet"))
+
+        if os.path.isfile(path_nip):
+            pass
+        else:
+            helper = Oracle_systematic_analysis_helper(hdf5_file_path=path_sim_data)
+            helper.get_negative_ip_sum_for_all_data(verbose=False, return_result=False)
+            helper.negative_ip_sum.to_parquet(path_nip)
+
 
     ## Define functions and hyperoarameters
     @st.cache(allow_output_mutation=True)
@@ -32,27 +48,34 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
         #path = "test3.h5ad"
         adata = sc.read_h5ad(path_adata)
 
+        if adata.raw is not None:
+            adata.raw = None
+            adata.write_h5ad(path_adata)
+            st.write("adata raw overwriting")
+        if len(adata.layers.keys()) != 0:
+            adata.layers = None
+            adata.write_h5ad(path_adata)
+            st.write("adata layers overwriting")
+
         # Make a new Oracle_developmennt_module object to read calculation result
         dev = Oracle_development_module()
         dev.set_hdf_path(path=path_sim_data)
+        meta_data = dev.get_hdf5_info()
 
-        return adata, dev
+        return adata, dev, meta_data
 
 
     @st.cache(allow_output_mutation=True, suppress_st_warning=True)
     def load_ip_scores(path_sim_data):
         # Load data with Oracle_systematic_analysis_helper.
+        path_nip = os.path.join("tmp", os.path.basename(path_sim_data).replace(".hdf5", "negative_ip_sum.parquet"))
         helper = Oracle_systematic_analysis_helper(hdf5_file_path=path_sim_data)
-        helper.get_negative_ip_sum_for_all_data(verbose=False, return_result=False)
-        st.write("Preparing data..")
-
+        helper.negative_ip_sum = pd.read_parquet(path_nip)
         return helper
 
     #@st.cache(allow_output_mutation=True)
     def load_oravle_dev(gene, misc):
-
         dev.load_hdf5(gene=gene, misc=misc)
-
         return dev
 
     def plot_embeddings(x, args={}):
@@ -64,11 +87,12 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
     ### APP starts here
 
     ## Load data
-    adata, dev = load_data(path_adata=path_adata, path_sim_data=path_sim_data)
-    meta_data = dev.get_hdf5_info()
+    adata, dev, meta_data= load_data(path_adata=path_adata, path_sim_data=path_sim_data)
 
     if pseudotime_min is not None:
+        first_data_prep_ip(path_sim_data=path_sim_data)
         helper = load_ip_scores(path_sim_data=path_sim_data)
+
     ## Side bar
 
     st.sidebar.write(f"# {title}")
@@ -79,7 +103,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
     gene_viz = st.sidebar.selectbox("Select gene to show gene expression",
                                 genes,
                                 index=genes.index(default_gene))
-    
+
     st.sidebar.write("## 2. Simulation")
 
     # Select metric

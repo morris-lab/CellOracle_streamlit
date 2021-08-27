@@ -45,11 +45,11 @@ def plot_ip_score(dev, vmin, vmax, scale_perturb):
 
     fig, ax = plt.subplots(1, 2, figsize=FIG_SIZE_2)
     dev.plot_inner_product_on_grid(ax=ax[0], vmin=vmin, vmax=vmax)
-    ax[0].set_title("Inner-product score")
+    ax[0].set_title("Perturbation score")
 
     dev.plot_inner_product_on_grid(ax=ax[1], vmin=vmin, vmax=vmax)
     dev.plot_simulation_flow_on_grid(ax=ax[1], scale=scale_perturb, show_background=False)
-    ax[1].set_title("Inner-product score \nwith KO simulation vectorfield")
+    ax[1].set_title("Perturbation score \nand KO simulation vectorfield")
 
     return fig
 

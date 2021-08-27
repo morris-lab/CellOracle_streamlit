@@ -112,7 +112,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
                                  units,
                                  index=units.index(default_unit))
 
-    st.sidebar.write("Select gene from the list. The list includes genes that meet the requirements.")
+    #st.sidebar.write("Select gene from the list")
     genes_sim = sorted(meta_data["misc_gene_dictionary"][unit])
     gene = st.sidebar.selectbox("Select gene for simulation",
                                 genes_sim,
@@ -129,18 +129,18 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
                                       min_value=sim_scale_min, max_value=sim_scale_max,
                                       step=sim_scale_step, value=sim_scale_default)
 
-    vmin = st.sidebar.slider("IP score min",
+    vmin = st.sidebar.slider("Perturbation score min",
                            min_value=ip_min,
                            max_value=-ip_step, step=ip_step, value=ip_min_default)
-    vmax = st.sidebar.slider("IP score max",
+    vmax = st.sidebar.slider("Perturbation score max",
                            min_value=ip_step,
                            max_value=ip_max, step=ip_step, value=ip_max_default)
 
 
     if pseudotime_min is not None:
 
-        st.sidebar.write("## 3. Sort genes by Negative IP sum score")
-        st.sidebar.write("Select digitized pseudotime range for inner product score sum calculation")
+        st.sidebar.write("## 3. Sort genes by Negative PS sum")
+        st.sidebar.write("Select digitized pseudotime range for PS sum calculation")
         lower = st.sidebar.number_input("Lower",
                                         min_value=pseudotime_min,
                                         max_value=pseudotime_max,
@@ -179,13 +179,13 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
     st.pyplot(plot_sim_quiver(dev, gene, scale_perturb, coef=sim_coef))
     st.pyplot(plot_sim_vectorfield(dev, gene, scale_perturb))
 
-    st.write("## 3. Inner-product score between simulation vector and pseudotime vector")
+    st.write("## 3. Perturbation score (PS)")
     st.pyplot(plot_ip_score(dev, vmin, vmax, scale_perturb))
     st.pyplot(plot_ip_distribution(dev, vmin, vmax))
 
     if pseudotime_min is not None:
 
-        st.write(f"# 3. Sort genes by Negative IP sum score")
+        st.write(f"# 3. Sort genes by Negative PS sum")
 
         range_int = list(np.arange(int(lower), int(upper) + 1))
         range_ = [str(i) for i in range_int]
@@ -194,7 +194,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
         st.write("Selected simulation unit: ", unit)
         st.write("Selected pseudotime range: " + range_)
         col1, col2 =  st.beta_columns([1.2, 1])
-        col1.write("Gene list sorted by sum of IP scores")
+        col1.write("Gene list sorted by sum of PS")
         col1.dataframe(helper.sort_TFs_by_neagative_ip(unit, pseudotime=range_))
         col2.write("Selected grid points")
         col2.pyplot(plot_selected_pseudotime(dev, pseudotime_selected=range_int))

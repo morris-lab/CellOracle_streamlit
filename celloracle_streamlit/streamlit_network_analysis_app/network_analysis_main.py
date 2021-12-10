@@ -143,7 +143,7 @@ def network_analysis_01(path_links, embedding_key,
     if path_adata is not None:
         st.write("# scRNA-seq data")
 
-        #col1, col2 = st.beta_columns(2)
+        #col1, col2 = st.columns(2)
         st.write("### Clustering")
         st.image(emgedding_img)
 
@@ -155,7 +155,7 @@ def network_analysis_01(path_links, embedding_key,
     st.write(f"# Network scores")
     st.write(f"## 1. Top {n_genes} genes in {cluster} GRN centrality scores")
 
-    col1, col2, col3 = st.beta_columns(3)
+    col1, col2, col3 = st.columns(3)
     col1.pyplot(plot_scores_as_rank(merged_score=merged_score,
                                     cluster=cluster,
                                     value="degree_centrality_all",
@@ -194,7 +194,7 @@ def network_analysis_01(path_links, embedding_key,
     st.pyplot(plot_score_per_cluster(merged_score=merged_score, palette=palette, gene=gene, figsize=[6, 5]))
 
     st.write("## 2. Gene cartography analysis")
-    col1, col2 = st.beta_columns([1, 2])
+    col1, col2 = st.columns([1, 2])
     col1.write("### 2.1 Cartography summary")
     if gene in genes_in_links:
         col1.pyplot(plot_carto_terms(merged_score=merged_score, palette=palette, gene=gene))

@@ -160,7 +160,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
 
     st.write("# 1. scRNA-seq data expolation")
 
-    col1, col2 = st.beta_columns(2)
+    col1, col2 = st.columns(2)
     col1.write("### Cell type annotation")
     col1.pyplot(plot_embeddings(cluster_column_name, args={"legend_loc": "on data"}))
 
@@ -193,7 +193,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
 
         st.write("Selected simulation unit: ", unit)
         st.write("Selected pseudotime range: " + range_)
-        col1, col2 =  st.beta_columns([1.2, 1])
+        col1, col2 =  st.columns([1.2, 1])
         col1.write("Gene list sorted by sum of PS")
         col1.dataframe(helper.sort_TFs_by_neagative_ip(unit, pseudotime=range_))
         col2.write("Selected grid points")

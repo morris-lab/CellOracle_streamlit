@@ -26,7 +26,7 @@ def plot_sim_vectorfield(dev, gene, scale_perturb):
     dev.plot_simulation_flow_on_grid(ax=ax[0], scale=scale_perturb, s=S)
     ax[0].set_title(f"Vectorfield: {gene} KO simulation")
     dev.plot_simulation_flow_random_on_grid(ax=ax[1], scale=scale_perturb, s=S)
-    ax[1].set_title(f"Vectorfield: Simulation with randomized GRNs")
+    ax[1].set_title(f"Vectorfield: Simulation with randomized simulation vector")
 
     return fig
 
@@ -37,7 +37,7 @@ def plot_sim_quiver(dev, gene, scale_perturb, coef=40):
     dev.plot_quiver(ax=ax[0], scale=scale_perturb*coef, s=S)
     ax[0].set_title(f"Quiver plot: {gene} KO simulation")
     dev.plot_quiver_random(ax=ax[1], scale=scale_perturb*coef, s=S)
-    ax[1].set_title(f"Quiver plot: Simulation with randomized GRNs")
+    ax[1].set_title(f"Quiver plot: Simulation with randomized simulation vector")
 
     return fig
 

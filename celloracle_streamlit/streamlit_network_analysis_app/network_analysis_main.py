@@ -6,7 +6,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+import matplotlib
 matplotlib.use("Agg")
+from matplotlib.backends.backend_agg import RendererAgg
+_lock = RendererAgg.lock
+
 
 from skimage import io
 
@@ -19,7 +23,7 @@ def network_analysis_01(path_links, embedding_key,
     default_cluster_0, default_cluster_1, cluster_column_name,
     default_gene,
     network_score_kinds, n_genes,
-    description_0, title, path_adata=None):
+    description_0, title, path_adata=None, lock_matplotlib=True):
 
 
     ## Define functions and hyperoarameters
@@ -158,18 +162,33 @@ def network_analysis_01(path_links, embedding_key,
     st.write(f"## 1. Top {n_genes} genes in {cluster} GRN centrality scores")
 
     col1, col2, col3 = st.columns(3)
-    col1.pyplot(plot_scores_as_rank(merged_score=merged_score,
-                                    cluster=cluster,
-                                    value="degree_centrality_all",
-                                    n_gene=n_genes))
-    col2.pyplot(plot_scores_as_rank(merged_score=merged_score,
-                                    cluster=cluster,
-                                    value="betweenness_centrality",
-                                    n_gene=n_genes))
-    col3.pyplot(plot_scores_as_rank(merged_score=merged_score,
-                                    cluster=cluster,
-                                    value="eigenvector_centrality",
-                                    n_gene=n_genes))
+    if lock_matplotlib:
+        with _lock:
+            col1.pyplot(plot_scores_as_rank(merged_score=merged_score,
+                                            cluster=cluster,
+                                            value="degree_centrality_all",
+                                            n_gene=n_genes))
+            col2.pyplot(plot_scores_as_rank(merged_score=merged_score,
+                                            cluster=cluster,
+                                            value="betweenness_centrality",
+                                            n_gene=n_genes))
+            col3.pyplot(plot_scores_as_rank(merged_score=merged_score,
+                                            cluster=cluster,
+                                            value="eigenvector_centrality",
+                                            n_gene=n_genes))
+    else:
+        col1.pyplot(plot_scores_as_rank(merged_score=merged_score,
+                                            cluster=cluster,
+                                            value="degree_centrality_all",
+                                            n_gene=n_genes))
+        col2.pyplot(plot_scores_as_rank(merged_score=merged_score,
+                                        cluster=cluster,
+                                        value="betweenness_centrality",
+                                        n_gene=n_genes))
+        col3.pyplot(plot_scores_as_rank(merged_score=merged_score,
+                                        cluster=cluster,
+                                        value="eigenvector_centrality",
+                                        n_gene=n_genes))
 
 
     st.write(f"## 2. All scores in {cluster} GRN")
@@ -192,14 +211,36 @@ def network_analysis_01(path_links, embedding_key,
     else:
         st.write(f"### Caution! {gene} does not have any connection in the filtered GRNs.")
     st.write(f"## 1. Score dynamics")
-    st.pyplot(plot_score_per_cluster(merged_score=merged_score, palette=palette, gene=gene, figsize=[6, 5]))
-    
+    if lock_matplotlib:
+        with _lock:
+            st.pyplot(plot_score_per_cluster(merged_score=merged_score, 
+                                             palette=palette, gene=gene,
+                                             figsize=[6, 5]))
+    else:
+        st.pyplot(plot_score_per_cluster(merged_score=merged_score, 
+                                             palette=palette, gene=gene,
+                                             figsize=[6, 5]))
+        
     st.write("## 2. Gene cartography analysis")
     col1, col2 = st.columns([1, 2])
     col1.write("### 2.1 Cartography summary")
     if gene in genes_in_links:
-        col1.pyplot(plot_carto_terms(merged_score=merged_score, palette=palette, gene=gene))
+        if lock_matplotlib:
+            with _lock:
+                col1.pyplot(plot_carto_terms(merged_score=merged_score, 
+                                             palette=palette, gene=gene))
+        else:
+            col1.pyplot(plot_carto_terms(merged_score=merged_score, 
+                                             palette=palette, gene=gene))
     else:
         col1.write(f"{gene} does not have any connection in the filtered GRNs.")
     col2.write(f"### 2.2 Cartography of {gene} in {cluster} GRN")
-    col2.pyplot(plot_carto(merged_score=merged_score, gene=gene, cluster=cluster))
+    if lock_matplotlib:
+        with _lock:
+            col2.pyplot(plot_carto(merged_score=merged_score,
+                                   gene=gene, cluster=cluster))
+    else:
+        col2.pyplot(plot_carto(merged_score=merged_score,
+                                   gene=gene, cluster=cluster))
+
+

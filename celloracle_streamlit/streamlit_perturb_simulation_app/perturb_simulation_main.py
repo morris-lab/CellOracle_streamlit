@@ -46,7 +46,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
     @st.cache(allow_output_mutation=True)
     def load_data(path_adata, path_sim_data):
         #path = "test3.h5ad"
-        adata = sc.read_h5ad(path_adata)
+        adata = sc.read_h5ad(path_adata, backed="r")
 
         if adata.raw is not None:
             adata.raw = None
@@ -74,9 +74,9 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
         return helper
 
     #@st.cache(allow_output_mutation=True)
-    def load_oravle_dev(gene, misc):
-        dev.load_hdf5(gene=gene, misc=misc)
-        return dev
+    #def load_oravle_dev(gene, misc):
+    #    dev.load_hdf5(gene=gene, misc=misc)
+    #    return dev
 
     def plot_embeddings(x, args={}):
         fig = sc.pl.embedding(adata=adata, basis=embedding_key,
@@ -118,7 +118,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
                                 genes_sim,
                                 index=genes_sim.index(default_gene))
 
-    dev = load_oravle_dev(gene, unit)
+    dev.load_hdf5(gene=gene, misc=unit)
 
     # Parameters for visualization
     scale_devflow = st.sidebar.slider("Scale parameter for development flow vectors",
@@ -198,3 +198,4 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
         col1.dataframe(helper.sort_TFs_by_neagative_ip(unit, pseudotime=range_))
         col2.write("Selected grid points")
         col2.pyplot(plot_selected_pseudotime(dev, pseudotime_selected=range_int))
+

@@ -5,6 +5,9 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("Agg")
+
 from skimage import io
 
 
@@ -58,7 +61,7 @@ def network_analysis_01(path_links, embedding_key,
     @st.cache(allow_output_mutation=True)
     def load_anndata(path_adata):
         #path = "test3.h5ad"
-        adata = sc.read_h5ad(path_adata)
+        adata = sc.read_h5ad(path_adata, backed="r")
 
         return adata
 
@@ -151,7 +154,6 @@ def network_analysis_01(path_links, embedding_key,
         #col2.pyplot(plot_embeddings(gene, args={"use_raw":False, "cmap": "viridis"}))
 
 
-
     st.write(f"# Network scores")
     st.write(f"## 1. Top {n_genes} genes in {cluster} GRN centrality scores")
 
@@ -182,8 +184,7 @@ def network_analysis_01(path_links, embedding_key,
                                           value=value,
                                           cluster1=cluster1,
                                           cluster2=cluster2))
-
-
+    
     st.write("# Network dynamics")
     st.write(f"### Selected gene: {gene}")
     if gene in genes_in_links:
@@ -192,7 +193,7 @@ def network_analysis_01(path_links, embedding_key,
         st.write(f"### Caution! {gene} does not have any connection in the filtered GRNs.")
     st.write(f"## 1. Score dynamics")
     st.pyplot(plot_score_per_cluster(merged_score=merged_score, palette=palette, gene=gene, figsize=[6, 5]))
-
+    
     st.write("## 2. Gene cartography analysis")
     col1, col2 = st.columns([1, 2])
     col1.write("### 2.1 Cartography summary")

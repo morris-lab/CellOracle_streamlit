@@ -6,6 +6,10 @@ import numpy as np
 import scanpy as sc
 import os
 
+import matplotlib
+matplotlib.use("Agg")
+from matplotlib.backends.backend_agg import RendererAgg
+_lock = RendererAgg.lock
 
 from ..applications import Oracle_development_module, Oracle_systematic_analysis_helper
 
@@ -23,7 +27,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
     sim_scale_min, sim_scale_max, sim_scale_step, sim_scale_default, sim_coef,
     ip_min, ip_min_default, ip_max, ip_max_default, ip_step,
     description_0, description_1, title,
-    pseudotime_min=None, pseudotime_min_default=None, pseudotime_max=None, pseudotime_max_default=None):
+    pseudotime_min=None, pseudotime_min_default=None, pseudotime_max=None, pseudotime_max_default=None, lock_matplotlib=True):
 
 
     def first_data_prep_ip(path_sim_data):
@@ -162,10 +166,19 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
 
     col1, col2 = st.columns(2)
     col1.write("### Cell type annotation")
-    col1.pyplot(plot_embeddings(cluster_column_name, args={"legend_loc": "on data"}))
+    if lock_matplotlib:
+        with _lock:
+            col1.pyplot(plot_embeddings(cluster_column_name, 
+                                        args={"legend_loc": "on data"}))
+    else:
+        col1.pyplot(plot_embeddings(cluster_column_name, args={"legend_loc": "on data"}))
 
     col2.write("### Gene expression")
-    col2.pyplot(plot_embeddings(gene_viz, args={"use_raw":False, "cmap": "viridis"}))
+    if lock_matplotlib:
+        with _lock:
+            col2.pyplot(plot_embeddings(gene_viz, args={"use_raw":False, "cmap": "viridis"}))
+    else:
+        col2.pyplot(plot_embeddings(gene_viz, args={"use_raw":False, "cmap": "viridis"}))
 
     st.write(f"# 2. CellOracle gene perturbation simulation results")
     st.write(description_1)
@@ -173,15 +186,29 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
     st.write(f"### Selected Lineage for simulation: {unit}, Selected Gene: {gene}")
 
     st.write(f"## 1. Development direction")
-    st.pyplot(plot_cluster_and_dev_flow(dev, scale_devflow))
+    if lock_matplotlib:
+        with _lock:
+            st.pyplot(plot_cluster_and_dev_flow(dev, scale_devflow))
+    else:
+        st.pyplot(plot_cluster_and_dev_flow(dev, scale_devflow))
 
     st.write(f"## 2. KO Simulation results")
-    st.pyplot(plot_sim_quiver(dev, gene, scale_perturb, coef=sim_coef))
-    st.pyplot(plot_sim_vectorfield(dev, gene, scale_perturb))
+    if lock_matplotlib:
+        with _lock:
+            st.pyplot(plot_sim_quiver(dev, gene, scale_perturb, coef=sim_coef))
+            st.pyplot(plot_sim_vectorfield(dev, gene, scale_perturb))
+    else:
+        st.pyplot(plot_sim_quiver(dev, gene, scale_perturb, coef=sim_coef))
+        st.pyplot(plot_sim_vectorfield(dev, gene, scale_perturb))
 
     st.write("## 3. Perturbation score (PS)")
-    st.pyplot(plot_ip_score(dev, vmin, vmax, scale_perturb))
-    st.pyplot(plot_ip_distribution(dev, vmin, vmax))
+    if lock_matplotlib:
+        with _lock:
+            st.pyplot(plot_ip_score(dev, vmin, vmax, scale_perturb))
+            st.pyplot(plot_ip_distribution(dev, vmin, vmax))
+    else:
+        st.pyplot(plot_ip_score(dev, vmin, vmax, scale_perturb))
+        st.pyplot(plot_ip_distribution(dev, vmin, vmax))
 
     if pseudotime_min is not None:
 
@@ -197,5 +224,10 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
         col1.write("Gene list sorted by sum of PS")
         col1.dataframe(helper.sort_TFs_by_neagative_ip(unit, pseudotime=range_))
         col2.write("Selected grid points")
-        col2.pyplot(plot_selected_pseudotime(dev, pseudotime_selected=range_int))
+        if lock_matplotlib:
+            with _lock:
+                col2.pyplot(plot_selected_pseudotime(dev, pseudotime_selected=range_int))
+        else:
+            col2.pyplot(plot_selected_pseudotime(dev, pseudotime_selected=range_int))
+
 

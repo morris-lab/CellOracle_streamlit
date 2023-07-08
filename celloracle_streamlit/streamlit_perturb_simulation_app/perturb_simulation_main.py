@@ -21,6 +21,10 @@ from .perturb_simulation_visualization import (plot_cluster_and_dev_flow,
                                            plot_ip_distribution,
                                            plot_selected_pseudotime)
 
+@st.cache_data
+def convert_df(df):
+   return df.to_csv(index=False).encode('utf-8')
+
 def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_column_name,
     default_gene, default_unit,
     dev_scale_min, dev_scale_max, dev_scale_step, dev_scale_default,
@@ -47,7 +51,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
 
 
     ## Define functions and hyperoarameters
-    @st.cache(allow_output_mutation=True)
+    @st.cache_resource
     def load_data(path_adata, path_sim_data):
         #path = "test3.h5ad"
         adata = sc.read_h5ad(path_adata, backed="r")
@@ -69,7 +73,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
         return adata, dev, meta_data
 
 
-    @st.cache(allow_output_mutation=True, suppress_st_warning=True)
+    @st.cache_data
     def load_ip_scores(path_sim_data):
         # Load data with Oracle_systematic_analysis_helper.
         path_nip = os.path.join("tmp", os.path.basename(path_sim_data).replace(".hdf5", "negative_ip_sum.parquet"))
@@ -168,7 +172,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
     col1.write("### Cell type annotation")
     if lock_matplotlib:
         with _lock:
-            col1.pyplot(plot_embeddings(cluster_column_name, 
+            col1.pyplot(plot_embeddings(cluster_column_name,
                                         args={"legend_loc": "on data"}))
     else:
         col1.pyplot(plot_embeddings(cluster_column_name, args={"legend_loc": "on data"}))
@@ -221,13 +225,18 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
         st.write("Selected simulation unit: ", unit)
         st.write("Selected pseudotime range: " + range_)
         col1, col2 =  st.columns([1.2, 1])
-        col1.write("Gene list sorted by sum of PS")
-        col1.dataframe(helper.sort_TFs_by_neagative_ip(unit, pseudotime=range_))
+        df = helper.sort_TFs_by_neagative_ip(unit, pseudotime=range_)
+        csv = convert_df(df)
+        col1.write("Gene list sorted by sum of PS8")
+        col1.dataframe(df)
+        col1.download_button(label="Press to Download gene list",
+                             data=csv,
+                             file_name=f"Prioritized_TF_list_in_{unit.replace(' ', '_')}.csv",
+                             mime="text/csv",
+                             key='download-csv')
         col2.write("Selected grid points")
         if lock_matplotlib:
             with _lock:
                 col2.pyplot(plot_selected_pseudotime(dev, pseudotime_selected=range_int))
         else:
             col2.pyplot(plot_selected_pseudotime(dev, pseudotime_selected=range_int))
-
-

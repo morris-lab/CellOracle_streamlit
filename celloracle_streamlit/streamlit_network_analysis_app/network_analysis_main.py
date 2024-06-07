@@ -62,14 +62,14 @@ def network_analysis_01(path_links, embedding_key,
 
 
 
-    @st.cache(allow_output_mutation=True)
+    @st.cache_resource
     def load_anndata(path_adata):
         #path = "test3.h5ad"
         adata = sc.read_h5ad(path_adata, backed="r")
 
         return adata
 
-    @st.cache(allow_output_mutation=True)
+    @st.cache_data
     def load_network_data(path_links):
 
         path_score = os.path.join("tmp", os.path.basename(path_links).replace(".celloracle.links", "merged_score.parquet"))
@@ -80,7 +80,7 @@ def network_analysis_01(path_links, embedding_key,
 
         return merged_score, palette
 
-    @st.cache(allow_output_mutation=True)
+    @st.cache_data
     def load_cluster_image(path_adata):
         path_emgedding_img = os.path.join("tmp", os.path.basename(path_adata).replace(".h5ad", ".png"))
         emgedding_img = io.imread(path_emgedding_img)

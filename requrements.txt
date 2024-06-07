@@ -10,3 +10,4 @@ streamlit
 scikit-image
 plotly
 tables
+jupyter

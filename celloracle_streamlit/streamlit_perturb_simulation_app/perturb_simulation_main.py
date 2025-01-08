@@ -8,8 +8,8 @@ import os
 
 import matplotlib
 matplotlib.use("Agg")
-from matplotlib.backends.backend_agg import RendererAgg
-_lock = RendererAgg.lock
+#from matplotlib.backends.backend_agg import RendererAgg
+#_lock = RendererAgg.lock
 
 from ..applications import Oracle_development_module, Oracle_systematic_analysis_helper
 
@@ -31,7 +31,7 @@ def perturb_simulation_set_01(path_adata, path_sim_data, embedding_key, cluster_
     sim_scale_min, sim_scale_max, sim_scale_step, sim_scale_default, sim_coef,
     ip_min, ip_min_default, ip_max, ip_max_default, ip_step,
     description_0, description_1, title,
-    pseudotime_min=None, pseudotime_min_default=None, pseudotime_max=None, pseudotime_max_default=None, lock_matplotlib=True):
+    pseudotime_min=None, pseudotime_min_default=None, pseudotime_max=None, pseudotime_max_default=None, lock_matplotlib=False):
 
 
     def first_data_prep_ip(path_sim_data):

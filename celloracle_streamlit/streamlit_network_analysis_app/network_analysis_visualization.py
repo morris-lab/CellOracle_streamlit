@@ -32,7 +32,7 @@ def plot_carto_terms(merged_score, palette, gene):
     tt = tt.loc[gene].set_index("cluster")
     tt.columns = [i.replace("role_", "") for i in tt.columns]
     order = ["Ultra peripheral", "Peripheral", "Connector","Kinless","Provincical Hub","Connector Hub", "Kinless Hub"]
-    tt = tt.reindex(index=palette.index.values, columns=order).fillna(0)
+    tt = tt.reindex(index=palette.index.values, columns=order).astype("float").fillna(0)
 
     sns.heatmap(data=tt, cmap="Blues", cbar=False)
 

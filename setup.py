@@ -17,7 +17,7 @@ with open('LICENSE') as f:
 
 setup(
     name='celloracle_streamlit',
-    version="0.6.0",
+    version="0.7.0",
     description='celloracle_utility_functions',
     long_description=readme,
     python_requires='>=3.6',

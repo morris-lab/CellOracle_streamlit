@@ -9,7 +9,7 @@ from .streamlit_perturb_simulation_app.perturb_simulation_main import perturb_si
 from .streamlit_network_analysis_app.network_analysis_main import network_analysis_01
 #from . import motif_analysis
 
-__version__ = "0.4.2"
+__version__ = "0.7.0"
 
 
 __all__ = ["check_python_requirements"

@@ -6,10 +6,12 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-import matplotlib
+from pathlib import Path
+
+
 matplotlib.use("Agg")
-from matplotlib.backends.backend_agg import RendererAgg
-_lock = RendererAgg.lock
+#from matplotlib.backends.backend_agg import RendererAgg
+#_lock = RendererAgg.lock
 
 
 from skimage import io
@@ -23,7 +25,7 @@ def network_analysis_01(path_links, embedding_key,
     default_cluster_0, default_cluster_1, cluster_column_name,
     default_gene,
     network_score_kinds, n_genes,
-    description_0, title, path_adata=None, lock_matplotlib=True):
+    description_0, title, path_adata=None, lock_matplotlib=False):
 
 
     ## Define functions and hyperoarameters
@@ -72,9 +74,17 @@ def network_analysis_01(path_links, embedding_key,
     @st.cache_data
     def load_network_data(path_links):
 
-        path_score = os.path.join("tmp", os.path.basename(path_links).replace(".celloracle.links", "merged_score.parquet"))
-        path_palette = os.path.join("tmp", os.path.basename(path_links).replace(".celloracle.links", "palette.parquet"))
+        path_links = Path(path_links)
+        file_name = path_links.name
 
+        # Score file path
+        merged_score_file_name = file_name.replace(".celloracle.links", "merged_score.parquet")
+        path_score = path_links.parents[1].joinpath("tmp", merged_score_file_name)
+
+        # palette file path
+        palette_file_name = file_name.replace(".celloracle.links", "palette.parquet")
+        path_palette = path_links.parents[1].joinpath("tmp", palette_file_name)
+        
         merged_score = pd.read_parquet(path_score)
         palette = pd.read_parquet(path_palette)
 
